@@ -57,6 +57,7 @@ function rowToRecipe(row) {
     fridgeStorage: row.fridge_storage || '',
     freezerStorage: row.freezer_storage || '',
     videoUrl: row.video_url || '',
+    isDraft: !!row.is_draft,
   };
 }
 
@@ -75,6 +76,7 @@ function recipeToRow(r) {
     fridge_storage: r.fridgeStorage || null,
     freezer_storage: r.freezerStorage || null,
     video_url: r.videoUrl || null,
+    is_draft: !!r.isDraft,
   };
 }
 
@@ -234,14 +236,35 @@ function renderSections() {
   }
   empty.classList.add('hidden');
 
-  const grouped = recipes.reduce((acc, r) => {
+  const drafts = recipes.filter((r) => r.isDraft);
+  const published = recipes.filter((r) => !r.isDraft);
+
+  let html = '';
+
+  if (drafts.length > 0 && isLoggedIn) {
+    const cards = drafts
+      .sort((a, b) => a.title.localeCompare(b.title, 'es'))
+      .map((r) => recipeCardHtml(r))
+      .join('');
+    html += `
+      <section class="category-section drafts-section" id="cat-borradores">
+        <header class="category-header">
+          <div class="category-rule"><span>Pendientes</span></div>
+          <h2 class="category-title">Borradores</h2>
+        </header>
+        <div class="recipes-grid">${cards}</div>
+      </section>
+    `;
+  }
+
+  const grouped = published.reduce((acc, r) => {
     (acc[r.category] = acc[r.category] || []).push(r);
     return acc;
   }, {});
 
   const sortedCats = Object.keys(grouped).sort((a, b) => a.localeCompare(b, 'es'));
 
-  container.innerHTML = sortedCats
+  html += sortedCats
     .map((cat) => {
       const cards = grouped[cat]
         .sort((a, b) => a.title.localeCompare(b.title, 'es'))
@@ -258,6 +281,8 @@ function renderSections() {
       `;
     })
     .join('');
+
+  container.innerHTML = html;
 
   $$('.recipe-card').forEach((el) => {
     el.addEventListener('click', () => openView(el.dataset.id));
@@ -277,8 +302,11 @@ function recipeCardHtml(r) {
     ? `<div class="meta-mini">${meta.map((m) => `<span>${m}</span>`).join('')}</div>`
     : '';
 
+  const draftBadge = r.isDraft ? '<span class="draft-badge">Borrador</span>' : '';
+
   return `
-    <article class="recipe-card" data-id="${r.id}">
+    <article class="recipe-card${r.isDraft ? ' is-draft' : ''}" data-id="${r.id}">
+      ${draftBadge}
       ${thumb}
       <div class="body">
         <h3>${escapeHtml(r.title)}</h3>
@@ -306,7 +334,9 @@ function openForm(recipe = null) {
   if (!isLoggedIn) return;
 
   editingId = recipe ? recipe.id : null;
-  $('#modalTitle').textContent = recipe ? 'Editar receta' : 'Nueva receta';
+  $('#modalTitle').textContent = recipe
+    ? (recipe.isDraft ? 'Editar borrador' : 'Editar receta')
+    : 'Nueva receta';
   $('#recipeId').value = recipe?.id || '';
   $('#title').value = recipe?.title || '';
   $('#description').value = recipe?.description || '';
@@ -438,6 +468,7 @@ function openView(id) {
   const descHtml = r.description ? `<p class="view-desc">${escapeHtml(r.description)}</p>` : '';
 
   body.innerHTML = `
+    ${r.isDraft ? '<div class="view-draft-pill">Borrador</div>' : ''}
     <div class="view-meta-cat">${escapeHtml(r.category)}</div>
     <h2 class="view-recipe-title">${escapeHtml(r.title)}</h2>
     ${descHtml}
@@ -467,13 +498,34 @@ function closeView() {
 }
 
 // ---------- Form submit ----------
-async function handleSubmit(e) {
-  e.preventDefault();
+async function handleSubmit(asDraft) {
   if (!isLoggedIn) return;
 
   const submitBtn = $('#submitBtn');
+  const draftBtn = $('#saveDraftBtn');
+  const activeBtn = asDraft ? draftBtn : submitBtn;
+  const originalText = activeBtn.textContent;
+
+  // Validación: borradores sólo requieren título; publicar requiere todo
+  const title = $('#title').value.trim();
+  if (!title) {
+    alert('Necesitás al menos un título para guardar.');
+    return;
+  }
+  if (!asDraft) {
+    if (!splitLines($('#ingredients').value).length) {
+      alert('Para publicar necesitás al menos un ingrediente.');
+      return;
+    }
+    if (!splitLines($('#steps').value).length) {
+      alert('Para publicar necesitás al menos un paso de preparación.');
+      return;
+    }
+  }
+
   submitBtn.disabled = true;
-  submitBtn.textContent = 'Guardando…';
+  draftBtn.disabled = true;
+  activeBtn.textContent = 'Guardando…';
 
   try {
     const categorySelect = $('#category').value;
@@ -497,7 +549,7 @@ async function handleSubmit(e) {
     }
 
     const data = {
-      title: $('#title').value.trim(),
+      title,
       category,
       description: $('#description').value.trim(),
       prepTime: $('#prepTime').value.trim(),
@@ -510,6 +562,7 @@ async function handleSubmit(e) {
       fridgeStorage: $('#fridgeStorage').value.trim(),
       freezerStorage: $('#freezerStorage').value.trim(),
       videoUrl: $('#videoUrl').value.trim(),
+      isDraft: asDraft,
     };
 
     const row = recipeToRow(data);
@@ -530,7 +583,8 @@ async function handleSubmit(e) {
     alert('Error al guardar: ' + (err?.message || err));
   } finally {
     submitBtn.disabled = false;
-    submitBtn.textContent = 'Guardar';
+    draftBtn.disabled = false;
+    activeBtn.textContent = originalText;
   }
 }
 
@@ -768,7 +822,12 @@ $$('[data-close-modal]').forEach((el) => el.addEventListener('click', closeForm)
 $$('[data-close-view]').forEach((el) => el.addEventListener('click', closeView));
 $$('[data-close-login]').forEach((el) => el.addEventListener('click', closeLogin));
 
-$('#recipeForm').addEventListener('submit', handleSubmit);
+$('#recipeForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  handleSubmit(false);
+});
+
+$('#saveDraftBtn').addEventListener('click', () => handleSubmit(true));
 $('#loginForm').addEventListener('submit', handleLogin);
 
 $('#category').addEventListener('change', (e) => {

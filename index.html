@@ -121,12 +121,12 @@
 
         <label class="field">
           <span>Ingredientes <em class="muted">(uno por línea)</em></span>
-          <textarea id="ingredients" rows="6" required placeholder="200 g de pasta seca&#10;1 cda de aceite de oliva&#10;1 pechuga de pollo&#10;3 dientes de ajo"></textarea>
+          <textarea id="ingredients" rows="6" placeholder="200 g de pasta seca&#10;1 cda de aceite de oliva&#10;1 pechuga de pollo&#10;3 dientes de ajo"></textarea>
         </label>
 
         <label class="field">
           <span>Preparación <em class="muted">(un paso por línea)</em></span>
-          <textarea id="steps" rows="6" required placeholder="Hervir la pasta en agua con sal.&#10;Saltear el pollo.&#10;Mezclar todo y servir."></textarea>
+          <textarea id="steps" rows="6" placeholder="Hervir la pasta en agua con sal.&#10;Saltear el pollo.&#10;Mezclar todo y servir."></textarea>
         </label>
 
         <label class="field">
@@ -152,7 +152,8 @@
 
         <div class="form-actions">
           <button type="button" class="btn-ghost" data-close-modal>Cancelar</button>
-          <button type="submit" class="btn-primary" id="submitBtn">Guardar</button>
+          <button type="button" class="btn-secondary" id="saveDraftBtn">Guardar borrador</button>
+          <button type="submit" class="btn-primary" id="submitBtn">Publicar</button>
         </div>
       </form>
     </div>
