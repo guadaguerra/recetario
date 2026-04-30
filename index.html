@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recetas de Guadis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand-block">
+        <span class="brand-eyebrow">El Blog de</span>
+        <h1 class="brand">Recetas de Guadis</h1>
+      </div>
+      <nav id="categoryNav" class="category-nav"></nav>
+      <button id="loginBtn" class="btn-round admin-only logged-out-only" type="button" aria-label="Iniciar sesión" title="Iniciar sesión">↪</button>
+      <button id="openFormBtn" class="btn-round logged-in-only" type="button" aria-label="Nueva receta" title="Nueva receta">+</button>
+      <button id="logoutBtn" class="btn-round logged-in-only" type="button" aria-label="Cerrar sesión" title="Cerrar sesión">⏻</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="migrateBanner" class="migrate-banner hidden">
+      <span id="migrateBannerText"></span>
+      <button class="btn-primary" id="importLegacyBtn" type="button">Importar a la nube</button>
+    </div>
+
+    <section id="loadingState" class="empty-state">
+      <p class="empty-title">Cargando recetas…</p>
+    </section>
+
+    <section id="emptyState" class="empty-state hidden">
+      <p class="empty-title">Aún no hay recetas guardadas</p>
+      <p class="empty-sub logged-in-only">Agregá la primera con el botón <strong>+</strong>.</p>
+    </section>
+
+    <div id="recipeSections"></div>
+  </main>
+
+  <!-- Modal: nueva / editar receta -->
+  <div id="recipeModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <h2 id="modalTitle">Nueva receta</h2>
+        <button class="icon-btn" type="button" data-close-modal aria-label="Cerrar">×</button>
+      </div>
+
+      <form id="recipeForm" class="recipe-form">
+        <input type="hidden" id="recipeId" />
+
+        <label class="field">
+          <span>Nombre</span>
+          <input type="text" id="title" required placeholder="Ej. Chicken Pasta" />
+        </label>
+
+        <label class="field">
+          <span>Categoría</span>
+          <select id="category" required>
+            <option value="Dulce">Dulce</option>
+            <option value="Salado">Salado</option>
+            <option value="Bebidas">Bebidas</option>
+            <option value="Postres">Postres</option>
+            <option value="Panadería">Panadería</option>
+            <option value="__custom__">+ Crear nueva categoría…</option>
+          </select>
+        </label>
+
+        <label class="field hidden" id="customCategoryField">
+          <span>Nueva categoría</span>
+          <input type="text" id="customCategory" placeholder="Ej. Vegano" />
+        </label>
+
+        <div class="field-row">
+          <label class="field">
+            <span>Preparación</span>
+            <input type="text" id="prepTime" placeholder="10 min" />
+          </label>
+          <label class="field">
+            <span>Cocción</span>
+            <input type="text" id="cookTime" placeholder="15 min" />
+          </label>
+          <label class="field">
+            <span>Porciones</span>
+            <input type="text" id="servings" placeholder="4" />
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Imagen</span>
+          <input type="file" id="image" accept="image/*" />
+          <img id="imagePreview" class="image-preview hidden" alt="" />
+        </label>
+
+        <label class="field">
+          <span>Descripción breve <em class="muted">(opcional)</em></span>
+          <textarea id="description" rows="2" placeholder="Una línea sobre la receta…"></textarea>
+        </label>
+
+        <label class="field">
+          <span>Ingredientes <em class="muted">(uno por línea)</em></span>
+          <textarea id="ingredients" rows="6" required placeholder="200 g de pasta seca&#10;1 cda de aceite de oliva&#10;1 pechuga de pollo&#10;3 dientes de ajo"></textarea>
+        </label>
+
+        <label class="field">
+          <span>Preparación <em class="muted">(un paso por línea)</em></span>
+          <textarea id="steps" rows="6" required placeholder="Hervir la pasta en agua con sal.&#10;Saltear el pollo.&#10;Mezclar todo y servir."></textarea>
+        </label>
+
+        <label class="field">
+          <span>Notas <em class="muted">(opcional)</em></span>
+          <textarea id="notes" rows="3" placeholder="Tips, sustituciones, comentarios…"></textarea>
+        </label>
+
+        <div class="field-row field-row-2">
+          <label class="field">
+            <span>Heladera <em class="muted">(opcional)</em></span>
+            <input type="text" id="fridgeStorage" placeholder="3 días en hermético" />
+          </label>
+          <label class="field">
+            <span>Freezer <em class="muted">(opcional)</em></span>
+            <input type="text" id="freezerStorage" placeholder="Hasta 2 meses" />
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Link <em class="muted">(opcional — video, TikTok, web, etc.)</em></span>
+          <input type="url" id="videoUrl" placeholder="https://…" />
+        </label>
+
+        <div class="form-actions">
+          <button type="button" class="btn-ghost" data-close-modal>Cancelar</button>
+          <button type="submit" class="btn-primary" id="submitBtn">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: ver receta -->
+  <div id="viewModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close-view></div>
+    <div class="modal-content view-content" role="dialog" aria-modal="true">
+      <button class="icon-btn view-close" type="button" data-close-view aria-label="Cerrar">×</button>
+      <div id="viewBody" class="view-body"></div>
+      <div class="form-actions view-actions logged-in-only">
+        <button type="button" class="btn-ghost" id="deleteBtn">Eliminar</button>
+        <button type="button" class="btn-primary" id="editBtn">Editar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: login -->
+  <div id="loginModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close-login></div>
+    <div class="modal-content modal-small" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <h2>Iniciar sesión</h2>
+        <button class="icon-btn" type="button" data-close-login aria-label="Cerrar">×</button>
+      </div>
+      <form id="loginForm" class="recipe-form">
+        <label class="field">
+          <span>Email</span>
+          <input type="email" id="loginEmail" required autocomplete="email" />
+        </label>
+        <label class="field">
+          <span>Contraseña</span>
+          <input type="password" id="loginPassword" required autocomplete="current-password" />
+        </label>
+        <div id="loginError" class="login-error hidden"></div>
+        <div class="form-actions">
+          <button type="button" class="btn-ghost" data-close-login>Cancelar</button>
+          <button type="submit" class="btn-primary">Entrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
