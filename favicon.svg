@@ -5,6 +5,6 @@
     <circle cx="50" cy="30" r="22"/>
     <circle cx="68" cy="40" r="18"/>
     <rect x="22" y="56" width="56" height="28" rx="3"/>
-    <rect x="22" y="60" width="56" height="3" fill="#ffffff" opacity="0.55"/>
   </g>
+  <text x="50" y="79" font-family="Georgia, 'Times New Roman', serif" font-size="24" font-weight="700" text-anchor="middle" fill="#ffffff">G</text>
 </svg>
