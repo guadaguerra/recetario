@@ -646,11 +646,123 @@ async function handleLogout() {
   await sb.auth.signOut();
 }
 
+// ---------- Búsqueda ----------
+function normalizeText(s) {
+  return String(s || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '');
+}
+
+function searchRecipes(query) {
+  const nq = normalizeText(query.trim());
+  if (!nq) return [];
+
+  return recipes
+    .map((r) => {
+      const title = normalizeText(r.title);
+      const category = normalizeText(r.category);
+      const description = normalizeText(r.description);
+      const ingredients = (r.ingredients || []).map(normalizeText).join(' ');
+
+      let score = 0;
+      if (title.startsWith(nq)) score = 100;
+      else if (title.includes(nq)) score = 80;
+      else if (category.includes(nq)) score = 50;
+      else if (description.includes(nq)) score = 30;
+      else if (ingredients.includes(nq)) score = 20;
+
+      return { r, score };
+    })
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score || a.r.title.localeCompare(b.r.title, 'es'))
+    .slice(0, 10)
+    .map((x) => x.r);
+}
+
+function renderSearchResults(query) {
+  const results = $('#searchResults');
+  const value = query.trim();
+
+  if (!value) {
+    results.classList.add('hidden');
+    results.innerHTML = '';
+    return;
+  }
+
+  const matches = searchRecipes(value);
+
+  if (matches.length === 0) {
+    results.innerHTML = '<div class="search-no-results">No se encontraron recetas</div>';
+  } else {
+    results.innerHTML = matches
+      .map((r) => {
+        const thumb = r.image
+          ? `<img class="search-result-thumb" src="${r.image}" alt="" />`
+          : `<div class="search-result-thumb search-result-thumb-empty">Sin foto</div>`;
+        return `
+          <button class="search-result-item" data-id="${r.id}" type="button">
+            ${thumb}
+            <div class="search-result-info">
+              <div class="search-result-title">${escapeHtml(r.title)}</div>
+              <div class="search-result-cat">${escapeHtml(r.category)}</div>
+            </div>
+          </button>`;
+      })
+      .join('');
+
+    results.querySelectorAll('.search-result-item').forEach((el) => {
+      el.addEventListener('click', () => {
+        const id = el.dataset.id;
+        clearSearch();
+        openView(id);
+      });
+    });
+  }
+
+  results.classList.remove('hidden');
+}
+
+function clearSearch() {
+  $('#searchInput').value = '';
+  $('#searchClear').classList.add('hidden');
+  $('#searchResults').classList.add('hidden');
+  $('#searchResults').innerHTML = '';
+}
+
 // ---------- Wiring ----------
 $('#openFormBtn').addEventListener('click', () => openForm());
 $('#loginBtn').addEventListener('click', openLogin);
 $('#logoutBtn').addEventListener('click', handleLogout);
 $('#importLegacyBtn').addEventListener('click', importLegacyRecipes);
+
+$('#searchInput').addEventListener('input', (e) => {
+  const val = e.target.value;
+  $('#searchClear').classList.toggle('hidden', !val);
+  renderSearchResults(val);
+});
+
+$('#searchInput').addEventListener('focus', (e) => {
+  if (e.target.value.trim()) renderSearchResults(e.target.value);
+});
+
+$('#searchClear').addEventListener('click', () => {
+  clearSearch();
+  $('#searchInput').focus();
+});
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.search-wrapper')) {
+    $('#searchResults').classList.add('hidden');
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.activeElement === $('#searchInput')) {
+    clearSearch();
+    $('#searchInput').blur();
+  }
+});
 
 $$('[data-close-modal]').forEach((el) => el.addEventListener('click', closeForm));
 $$('[data-close-view]').forEach((el) => el.addEventListener('click', closeView));

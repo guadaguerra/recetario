@@ -251,6 +251,170 @@ body.is-logged-in #emptyState .logged-in-only { display: block !important; }
 
 .icon-btn:hover { color: var(--accent); }
 
+/* ----- Search bar ----- */
+.search-bar {
+  background: var(--accent);
+  padding: 0 2rem 1.25rem;
+  position: relative;
+}
+
+.search-wrapper {
+  max-width: 1180px;
+  margin: 0 auto;
+  position: relative;
+}
+
+#searchInput {
+  width: 100%;
+  padding: 0.85rem 2.5rem 0.85rem 2.85rem;
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-family: var(--sans);
+  font-size: 0.95rem;
+  color: var(--ink);
+  -webkit-appearance: none;
+  appearance: none;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+#searchInput::placeholder { color: var(--muted); }
+
+#searchInput::-webkit-search-decoration,
+#searchInput::-webkit-search-cancel-button,
+#searchInput::-webkit-search-results-button,
+#searchInput::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+  display: none;
+}
+
+#searchInput:focus {
+  outline: none;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.18);
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.search-clear {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 1.5rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+  border-radius: 50%;
+  z-index: 2;
+}
+
+.search-clear:hover { color: var(--accent); background: rgba(0, 0, 0, 0.05); }
+
+.search-results {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  right: 0;
+  max-height: 65vh;
+  overflow-y: auto;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.18);
+  z-index: 50;
+  -webkit-overflow-scrolling: touch;
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.65rem 0.85rem;
+  cursor: pointer;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  font-family: var(--sans);
+  transition: background 0.1s ease;
+}
+
+.search-result-item:last-child { border-bottom: none; }
+.search-result-item:hover,
+.search-result-item:focus { background: var(--paper-tint); outline: none; }
+
+.search-result-thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border-radius: 2px;
+  background: var(--paper-tint);
+}
+
+.search-result-thumb-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1px solid var(--line);
+}
+
+.search-result-info {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.search-result-title {
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  color: var(--ink);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-result-cat {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  margin-top: 0.15rem;
+}
+
+.search-no-results {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--muted);
+  font-style: italic;
+  font-family: var(--serif);
+}
+
 /* ----- Layout ----- */
 .container {
   max-width: 1180px;
@@ -881,6 +1045,7 @@ body.is-logged-in #emptyState .logged-in-only { display: block !important; }
     font-size: 0.74rem;
     letter-spacing: 0.16em;
   }
+  .search-bar { padding: 0 1.25rem 1rem; }
 }
 
 /* ----- Móvil (<= 600px) ----- */
@@ -940,6 +1105,13 @@ body.is-logged-in #emptyState .logged-in-only { display: block !important; }
     font-size: 0.72rem;
     letter-spacing: 0.15em;
   }
+
+  /* Search bar mobile */
+  .search-bar { padding: 0 1rem 0.9rem; }
+  #searchInput { font-size: 16px; padding: 0.8rem 2.4rem 0.8rem 2.6rem; }
+  .search-results { max-height: 70vh; }
+  .search-result-thumb { width: 44px; height: 44px; }
+  .search-result-title { font-size: 1rem; }
 
   /* Container y secciones */
   .container { padding: 2rem 1rem 6rem; }
