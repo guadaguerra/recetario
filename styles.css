@@ -836,6 +836,53 @@ body.is-logged-in #emptyState .logged-in-only { display: block !important; }
   .field-row { grid-template-columns: 1fr 1fr 1fr; gap: 0.6rem; }
 }
 
+/* ----- Header mobile/tablet (<= 768px): mismo layout que móvil ----- */
+@media (max-width: 768px) {
+  .site-header { padding-bottom: 0; }
+  .header-inner {
+    padding: 0.85rem 1.25rem 0;
+    gap: 0.5rem 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .brand-block { flex: 1 1 auto; min-width: 0; order: 1; }
+  .brand-eyebrow { display: none; }
+  .brand {
+    font-size: 1.4rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #loginBtn.btn-round,
+  #openFormBtn.btn-round,
+  #logoutBtn.btn-round {
+    width: 44px;
+    height: 44px;
+    font-size: 1.5rem;
+    order: 2;
+  }
+  .category-nav {
+    width: 100%;
+    flex: 0 0 100%;
+    order: 99;
+    justify-content: flex-start;
+    gap: 1.4rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.7rem 1.25rem 0.85rem;
+    margin: 0.6rem -1.25rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.18);
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .category-nav::-webkit-scrollbar { display: none; }
+  .category-nav a {
+    flex-shrink: 0;
+    font-size: 0.74rem;
+    letter-spacing: 0.16em;
+  }
+}
+
 /* ----- Móvil (<= 600px) ----- */
 @media (max-width: 600px) {
   html, body { font-size: 15px; }
@@ -846,11 +893,11 @@ body.is-logged-in #emptyState .logged-in-only { display: block !important; }
   }
   .header-inner {
     padding: 0.85rem 1rem 0;
-    gap: 0.75rem;
-    flex-wrap: nowrap;
+    gap: 0.5rem 0.75rem;
+    flex-wrap: wrap;
     align-items: center;
   }
-  .brand-block { flex: 1; min-width: 0; }
+  .brand-block { flex: 1 1 auto; min-width: 0; order: 1; }
   .brand-eyebrow { display: none; }
   .brand {
     font-size: 1.25rem;
@@ -859,18 +906,21 @@ body.is-logged-in #emptyState .logged-in-only { display: block !important; }
     text-overflow: ellipsis;
   }
 
-  /* Botón redondo en móvil: levemente más chico */
-  #openFormBtn.btn-round {
+  /* Botones del header en mobile: agrupados a la derecha del brand */
+  #loginBtn.btn-round,
+  #openFormBtn.btn-round,
+  #logoutBtn.btn-round {
     width: 42px;
     height: 42px;
     font-size: 1.4rem;
+    order: 2;
   }
 
   /* Nav: scroll horizontal para que las categorías no rompan línea */
   .category-nav {
     width: 100%;
     flex: 0 0 100%;
-    order: 3;
+    order: 99;
     justify-content: flex-start;
     gap: 1.25rem;
     overflow-x: auto;
