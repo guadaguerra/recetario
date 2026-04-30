@@ -1,0 +1,17 @@
+{
+  "name": "Recetas de Guadis",
+  "short_name": "Guadis",
+  "description": "Recetario personal de Guadis",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "theme_color": "#1f3fbe",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "start_url": "/"
+}
