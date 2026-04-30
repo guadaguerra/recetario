@@ -214,12 +214,24 @@ function render() {
 
 function renderNav() {
   const nav = $('#categoryNav');
-  const used = [...new Set(recipes.map((r) => r.category))].sort((a, b) =>
-    a.localeCompare(b, 'es')
+  const used = [...new Set(recipes.filter((r) => !r.isDraft).map((r) => r.category))].sort(
+    (a, b) => a.localeCompare(b, 'es')
   );
   nav.innerHTML = used
-    .map((cat) => `<a href="#cat-${slug(cat)}">${escapeHtml(cat)}</a>`)
+    .map(
+      (cat) => `<a href="#cat=${encodeURIComponent(cat)}">${escapeHtml(cat)}</a>`
+    )
     .join('');
+}
+
+function getCurrentRoute() {
+  const hash = location.hash.slice(1);
+  if (!hash) return { view: 'home' };
+  const params = new URLSearchParams(hash);
+  if (params.has('cat')) {
+    return { view: 'category', category: params.get('cat') };
+  }
+  return { view: 'home' };
 }
 
 function renderSections() {
@@ -236,10 +248,35 @@ function renderSections() {
   }
   empty.classList.add('hidden');
 
+  const route = getCurrentRoute();
+  if (route.view === 'category') {
+    renderCategory(route.category);
+  } else {
+    renderHome();
+  }
+
+  $$('.recipe-card').forEach((el) => {
+    el.addEventListener('click', () => openView(el.dataset.id));
+  });
+}
+
+function renderHome() {
+  const container = $('#recipeSections');
   const drafts = recipes.filter((r) => r.isDraft);
   const published = recipes.filter((r) => !r.isDraft);
 
-  let html = '';
+  const grouped = published.reduce((acc, r) => {
+    (acc[r.category] = acc[r.category] || []).push(r);
+    return acc;
+  }, {});
+  const sortedCats = Object.keys(grouped).sort((a, b) => a.localeCompare(b, 'es'));
+
+  let html = `
+    <section class="home-intro">
+      <h1>Bienvenidos al recetario</h1>
+      <p>Una colección de recetas caseras, organizadas por capítulos. Elegí uno para explorar.</p>
+    </section>
+  `;
 
   if (drafts.length > 0 && isLoggedIn) {
     const cards = drafts
@@ -247,7 +284,7 @@ function renderSections() {
       .map((r) => recipeCardHtml(r))
       .join('');
     html += `
-      <section class="category-section drafts-section" id="cat-borradores">
+      <section class="category-section drafts-section">
         <header class="category-header">
           <div class="category-rule"><span>Pendientes</span></div>
           <h2 class="category-title">Borradores</h2>
@@ -257,36 +294,96 @@ function renderSections() {
     `;
   }
 
-  const grouped = published.reduce((acc, r) => {
-    (acc[r.category] = acc[r.category] || []).push(r);
-    return acc;
-  }, {});
+  if (sortedCats.length === 0) {
+    container.innerHTML = html;
+    return;
+  }
 
-  const sortedCats = Object.keys(grouped).sort((a, b) => a.localeCompare(b, 'es'));
-
-  html += sortedCats
+  const categoryCards = sortedCats
     .map((cat) => {
-      const cards = grouped[cat]
-        .sort((a, b) => a.title.localeCompare(b.title, 'es'))
-        .map((r) => recipeCardHtml(r))
+      const inCat = grouped[cat];
+      const recipesWithImage = inCat.filter((r) => r.image).slice(0, 4);
+      const slots = [...recipesWithImage];
+      while (slots.length < 4) slots.push(null);
+      const thumbsHtml = slots
+        .map((r) =>
+          r
+            ? `<div class="cc-thumb" style="background-image:url('${r.image.replace(/'/g, "\\'")}')"></div>`
+            : `<div class="cc-thumb cc-thumb-empty"></div>`
+        )
         .join('');
+      const count = inCat.length;
+      const countText = count === 1 ? '1 receta' : `${count} recetas`;
       return `
-        <section class="category-section" id="cat-${slug(cat)}">
-          <header class="category-header">
-            <div class="category-rule"><span>Capítulo</span></div>
-            <h2 class="category-title">${escapeHtml(cat)}</h2>
-          </header>
-          <div class="recipes-grid">${cards}</div>
-        </section>
+        <a href="#cat=${encodeURIComponent(cat)}" class="category-card">
+          <div class="category-card-mosaic">${thumbsHtml}</div>
+          <div class="category-card-body">
+            <div class="category-card-name">${escapeHtml(cat)}</div>
+            <div class="category-card-count">${countText}</div>
+          </div>
+        </a>
       `;
     })
     .join('');
 
+  html += `
+    <section class="home-section">
+      <header class="category-header">
+        <div class="category-rule"><span>Capítulos</span></div>
+        <h2 class="category-title home-section-title">Categorías</h2>
+      </header>
+      <div class="home-categories">${categoryCards}</div>
+    </section>
+  `;
+
+  container.innerHTML = html;
+}
+
+function renderCategory(cat) {
+  const container = $('#recipeSections');
+  const inCat = recipes.filter((r) => r.category === cat && !r.isDraft);
+
+  let html = `
+    <button class="back-link" id="backLink" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="19" y1="12" x2="5" y2="12"/>
+        <polyline points="12 19 5 12 12 5"/>
+      </svg>
+      Volver al recetario
+    </button>
+  `;
+
+  if (inCat.length === 0) {
+    html += `
+      <section class="empty-state">
+        <p class="empty-title">Todavía no hay recetas en "${escapeHtml(cat)}"</p>
+      </section>
+    `;
+  } else {
+    const cards = inCat
+      .sort((a, b) => a.title.localeCompare(b.title, 'es'))
+      .map((r) => recipeCardHtml(r))
+      .join('');
+
+    html += `
+      <section class="category-section">
+        <header class="category-header">
+          <div class="category-rule"><span>Capítulo</span></div>
+          <h2 class="category-title">${escapeHtml(cat)}</h2>
+        </header>
+        <div class="recipes-grid">${cards}</div>
+      </section>
+    `;
+  }
+
   container.innerHTML = html;
 
-  $$('.recipe-card').forEach((el) => {
-    el.addEventListener('click', () => openView(el.dataset.id));
-  });
+  const back = $('#backLink');
+  if (back) {
+    back.addEventListener('click', () => {
+      location.hash = '';
+    });
+  }
 }
 
 function recipeCardHtml(r) {
@@ -816,6 +913,21 @@ document.addEventListener('keydown', (e) => {
     clearSearch();
     $('#searchInput').blur();
   }
+});
+
+// Logo / brand → vuelve al inicio
+$('.brand-block').addEventListener('click', () => {
+  if (location.hash) {
+    location.hash = '';
+  } else {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+});
+
+// Cambio de hash (navegación entre vistas) → re-render + scroll arriba
+window.addEventListener('hashchange', () => {
+  render();
+  window.scrollTo({ top: 0, behavior: 'instant' });
 });
 
 $$('[data-close-modal]').forEach((el) => el.addEventListener('click', closeForm));
